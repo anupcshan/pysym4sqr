@@ -41,6 +41,13 @@ class Network(object):
 	password = None
 	format = None
 
+	# "Global" objects / arrays containing all users / venues / checkins
+	users = []
+	venues = []
+	checkins = []
+
+	currentUser = None
+
 	def __init__(self, api_root, username, password, format):
 		"""
 			api_root: Root URL of the webservice API
@@ -54,11 +61,21 @@ class Network(object):
 		self.password = password
 		self.format = format
 
-	def do_login(self):
+	def doLogin(self):
 		"""
 			Test whether username and password are valid.
 		"""
 		pass
+
+	def getCurrentUser(self):
+		"""
+			Get SelfUser object corresponding to currently logged in user.
+		"""
+		if currentUser == None:
+			# TODO : Make call to get current user object
+			currentUser = None
+
+		return currentUser
 
 class _Networked(object):
 	"""An abstract webservices object"""
@@ -118,6 +135,7 @@ class User(_User):
 
 	def isFriend(self):
 		return friendstatus == "friend" ? True : False
+		# TODO : Handle friend request pending states
 
 class Venue(_Networked):
 	"""A venue."""
