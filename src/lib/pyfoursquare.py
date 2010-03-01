@@ -118,3 +118,38 @@ class User(_User):
 
 	def isFriend(self):
 		return friendstatus == "friend" ? True : False
+
+class Venue(_Networked):
+	"""A venue."""
+
+	id = None
+	name = None
+	address = None
+	crossstreet = None
+	city = None
+	state = None
+	zip = None
+	phone = None
+	geolat = None
+	geolong = None
+	twitter = None
+	stats = None
+	tips = None
+	tags = None
+	links = None
+
+	def __init__(self, network):
+		_Networked.__init__(network)
+
+class Checkin(_Networked):
+	"""A checkin."""
+
+	id = None
+	created = None
+	display = None
+	venue = None
+	shout = None
+	user = None
+
+	def __init__(self, network):
+		_Networked.__init__(network)
