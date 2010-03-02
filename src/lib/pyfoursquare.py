@@ -109,7 +109,7 @@ class CacheConfig(object):
 	# Maximum age of a cache object before expiry (in seconds)
 	# Negative value => cache valid forever
 
-	def __init__(self, cacheable, cacheMaxAge)
+	def __init__(self, cacheable, cacheMaxAge):
 		self.cacheable = cacheable
 		self.cacheMaxAge = cacheMaxAge
 
@@ -161,9 +161,10 @@ class _User(_Networked, _Cacheable):
 	checkin = None
 	badges = None
 
-	def __init__(self, network):
+	def __init__(self, network, id):
 		_Networked.__init__(network)
 		_Cacheable.init(True, 3600)
+		self.id = id
 
 	def isMe(self):
 		pass
@@ -174,8 +175,8 @@ class _User(_Networked, _Cacheable):
 class SelfUser(_User):
 	"""Current User. Only one object of this class can be created."""
 
-	def __init__(self, network):
-		_User.__init__(network)
+	def __init__(self, network, id):
+		_User.__init__(network, id)
 
 	def isMe(self):
 		return True
@@ -188,8 +189,8 @@ class User(_User):
 
 	friendstatus = None
 
-	def __init__(self, network):
-		_User.__init__(network)
+	def __init__(self, network, id):
+		_User.__init__(network, id)
 
 	def isMe(self):
 		return False
@@ -217,9 +218,10 @@ class Venue(_Networked, _Cacheable):
 	tags = None
 	links = None
 
-	def __init__(self, network):
+	def __init__(self, network, id):
 		_Networked.__init__(network)
 		_Cacheable.init(True, 86400)
+		self.id = id
 
 class Checkin(_Networked, _Cacheable):
 	"""A checkin."""
@@ -231,6 +233,7 @@ class Checkin(_Networked, _Cacheable):
 	shout = None
 	user = None
 
-	def __init__(self, network):
+	def __init__(self, network, id):
 		_Networked.__init__(network)
 		_Cacheable.init(True, -1)
+		self.id = id
