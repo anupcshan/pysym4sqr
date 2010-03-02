@@ -71,7 +71,8 @@ class Network(object):
 
 	def getCurrentUser(self):
 		"""
-			Get SelfUser object corresponding to currently logged in user.
+			Get SelfUser object corresponding to currently logged in
+			user.
 		"""
 		if currentUser == None:
 			# TODO : Make call to get current user object
@@ -79,16 +80,17 @@ class Network(object):
 
 		return currentUser
 
-	def makeRequest(self, command, arguments, type, cacheconfig,
-			version = None, format = None):
+	def makeRequest(self, command, arguments, type, cacheconfig, version =
+			None, format = None):
 		"""
 			command: API command (eg. venues)
 			arguments: Dict containing parameters to be sent
 			type: GET / POST
 			cacheconfig: CacheConfig object
-			version: (Optional) API version parameter
-				  (will override self.version)
-			format: (Optional) json / xml (will override self.format)
+			version: (Optional) API version parameter (will override
+					self.version)
+			format: (Optional) json / xml (will override
+					self.format)
 		"""
 		if version == None:
 			version = self.version
@@ -118,7 +120,7 @@ class _Cacheable(object):
 
 	cacheconfig = None
 
-	def __init__(self, cacheable, cacheMaxAge)
+	def __init__(self, cacheable, cacheMaxAge):
 		cacheconfig = CacheConfig(cacheable, cacheMaxAge)
 
 class Request(object):
@@ -196,7 +198,9 @@ class User(_User):
 		return False
 
 	def isFriend(self):
-		return friendstatus == "friend" ? True : False
+		if friendstatus == "friend":
+			return True
+		return False
 		# TODO : Handle friend request pending states
 
 class Venue(_Networked, _Cacheable):
