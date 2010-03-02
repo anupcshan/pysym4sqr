@@ -79,15 +79,13 @@ class Network(object):
 
 		return currentUser
 
-	def makeRequest(self, command, arguments, type, cacheable = False,
-			cacheMaxAge = 0, version = None, format = None):
+	def makeRequest(self, command, arguments, type, cacheconfig,
+			version = None, format = None):
 		"""
 			command: API command (eg. venues)
 			arguments: Dict containing parameters to be sent
 			type: GET / POST
-			cacheable: Is the request cacheable?
-			cacheMaxAge: Max time (in seconds) for which
-				  the cached object is valid
+			cacheconfig: CacheConfig object
 			version: (Optional) API version parameter
 				  (will override self.version)
 			format: (Optional) json / xml (will override self.format)
@@ -102,6 +100,26 @@ class Network(object):
 		# TODO : Add cache layer here. Call cache object which
 		#	 calls Request if required.
 		response = Request(url, arguments, type).execute()
+
+class CacheConfig(object):
+	"""Cache configuration object"""
+
+	cacheable = False
+	cacheMaxAge = 0
+	# Maximum age of a cache object before expiry (in seconds)
+	# Negative value => cache valid forever
+
+	def __init__(self, cacheable, cacheMaxAge)
+		self.cacheable = cacheable
+		self.cacheMaxAge = cacheMaxAge
+
+class _Cacheable(object):
+	"""Abstract cacheable object"""
+
+	cacheconfig = None
+
+	def __init__(self, cacheable, cacheMaxAge)
+		cacheconfig = CacheConfig(cacheable, cacheMaxAge)
 
 class Request(object):
 	"""A network request object"""
@@ -127,7 +145,7 @@ class _Networked(object):
 	def __init__(self, network):
 		self.network = network
 
-class _User(_Networked):
+class _User(_Networked, _Cacheable):
 	"""User Base object"""
 
 	id = None
@@ -145,6 +163,7 @@ class _User(_Networked):
 
 	def __init__(self, network):
 		_Networked.__init__(network)
+		_Cacheable.init(True, 3600)
 
 	def isMe(self):
 		pass
@@ -179,7 +198,7 @@ class User(_User):
 		return friendstatus == "friend" ? True : False
 		# TODO : Handle friend request pending states
 
-class Venue(_Networked):
+class Venue(_Networked, _Cacheable):
 	"""A venue."""
 
 	id = None
@@ -200,8 +219,9 @@ class Venue(_Networked):
 
 	def __init__(self, network):
 		_Networked.__init__(network)
+		_Cacheable.init(True, 86400)
 
-class Checkin(_Networked):
+class Checkin(_Networked, _Cacheable):
 	"""A checkin."""
 
 	id = None
@@ -213,3 +233,4 @@ class Checkin(_Networked):
 
 	def __init__(self, network):
 		_Networked.__init__(network)
+		_Cacheable.init(True, -1)
