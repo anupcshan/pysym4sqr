@@ -48,15 +48,17 @@ class Network(object):
 
 	currentUser = None
 
-	def __init__(self, api_root, username, password, format):
+	def __init__(self, api_root, api_version, username, password, format):
 		"""
 			api_root: Root URL of the webservice API
+			api_version: API version (eg. v1, v2 etc)
 			username: Username of a valid user
 			password: Password of the user
 			format: json / xml
 		"""
 
 		self.api_root = api_root
+		self.api_version = api_version
 		self.username = username
 		self.password = password
 		self.format = format
@@ -76,6 +78,46 @@ class Network(object):
 			currentUser = None
 
 		return currentUser
+
+	def makeRequest(self, command, arguments, type, cacheable = False,
+			cacheMaxAge = 0, version = None, format = None):
+		"""
+			command: API command (eg. venues)
+			arguments: Dict containing parameters to be sent
+			type: GET / POST
+			cacheable: Is the request cacheable?
+			cacheMaxAge: Max time (in seconds) for which
+				  the cached object is valid
+			version: (Optional) API version parameter
+				  (will override self.version)
+			format: (Optional) json / xml (will override self.format)
+		"""
+		if version == None:
+			version = self.version
+		if format == None:
+			format = self.format
+
+		url = self.api_root + '/' + version + '/' + command + '.' + format
+
+		# TODO : Add cache layer here. Call cache object which
+		#	 calls Request if required.
+		response = Request(url, arguments, type).execute()
+
+class Request(object):
+	"""A network request object"""
+
+	url = None
+	arguments = None
+	type = None
+
+	def __init__(self, url, arguments, type):
+		self.url = url
+		self.arguments = arguments
+		self.type = type
+
+	def execute(self):
+		# TODO : Write code for performing network request
+		pass
 
 class _Networked(object):
 	"""An abstract webservices object"""
