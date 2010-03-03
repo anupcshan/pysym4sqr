@@ -80,13 +80,12 @@ class Network(object):
 
 		return currentUser
 
-	def makeRequest(self, command, arguments, type, cacheconfig, version =
-			None, format = None):
+	def makeRequest(self, command, arguments, type, version = None, format =
+			None):
 		"""
 			command: API command (eg. venues)
 			arguments: Dict containing parameters to be sent
 			type: GET / POST
-			cacheconfig: CacheConfig object
 			version: (Optional) API version parameter (will override
 					self.version)
 			format: (Optional) json / xml (will override
@@ -99,9 +98,21 @@ class Network(object):
 
 		url = self.api_root + '/' + version + '/' + command + '.' + format
 
-		# TODO : Add cache layer here. Call cache object which
-		#	 calls Request if required.
 		response = Request(url, arguments, type).execute()
+
+class CacheMgr(object):
+	"""Interface to stored and retrieve objects in cache"""
+
+	# TODO : Add data members related to backend storage.
+
+	def __init__(self):
+		pass
+
+	def writeback(self, type, object):
+		"""
+			Method to write a formatted object into the cache.
+		"""
+		pass
 
 class CacheConfig(object):
 	"""Cache configuration object"""
@@ -119,9 +130,29 @@ class _Cacheable(object):
 	"""Abstract cacheable object"""
 
 	cacheconfig = None
+	cachemgr = None
+	objtype = None	# User/Venue/Checkin/...
+	id = None # Key used to store object in cache
 
-	def __init__(self, cacheable, cacheMaxAge):
-		cacheconfig = CacheConfig(cacheable, cacheMaxAge)
+	def __init__(self, cacheable, cacheMaxAge, cachemgr, id, objtype):
+		self.cacheconfig = CacheConfig(cacheable, cacheMaxAge)
+		self.cachemgr = cachemgr
+		self.id = id
+		self.objtype = objtype
+
+	def _cacheWriteback(self):
+		"""
+			Write object back into the cache. This method is to be
+			called immediately after a network request.
+		"""
+		cacheMgr.writeback(self.objtype, self._cacheFormatObject())
+
+	def _cacheFormatObject(self):
+		"""
+			Abstract method which defines the format of data to be
+			stored in cache. Needs to be implemented by child class.
+		"""
+		pass
 
 class Request(object):
 	"""A network request object"""
@@ -150,7 +181,6 @@ class _Networked(object):
 class _User(_Networked, _Cacheable):
 	"""User Base object"""
 
-	id = None
 	firstname = None
 	lastname = None
 	photo = None
@@ -163,10 +193,9 @@ class _User(_Networked, _Cacheable):
 	checkin = None
 	badges = None
 
-	def __init__(self, network, id):
+	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, 3600)
-		self.id = id
+		_Cacheable.init(True, 3600, cachemgr, id, 'User')
 
 	def isMe(self):
 		pass
@@ -177,8 +206,8 @@ class _User(_Networked, _Cacheable):
 class SelfUser(_User):
 	"""Current User. Only one object of this class can be created."""
 
-	def __init__(self, network, id):
-		_User.__init__(network, id)
+	def __init__(self, network, cachemgr, id):
+		_User.__init__(network, cachemgr, id)
 
 	def isMe(self):
 		return True
@@ -191,8 +220,8 @@ class User(_User):
 
 	friendstatus = None
 
-	def __init__(self, network, id):
-		_User.__init__(network, id)
+	def __init__(self, network, cachemgr, id):
+		_User.__init__(network, cachemgr, id)
 
 	def isMe(self):
 		return False
@@ -206,7 +235,6 @@ class User(_User):
 class Venue(_Networked, _Cacheable):
 	"""A venue."""
 
-	id = None
 	name = None
 	address = None
 	crossstreet = None
@@ -222,22 +250,19 @@ class Venue(_Networked, _Cacheable):
 	tags = None
 	links = None
 
-	def __init__(self, network, id):
+	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, 86400)
-		self.id = id
+		_Cacheable.init(True, 86400, cachemgr, id, 'Venue')
 
 class Checkin(_Networked, _Cacheable):
 	"""A checkin."""
 
-	id = None
 	created = None
 	display = None
 	venue = None
 	shout = None
 	user = None
 
-	def __init__(self, network, id):
+	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, -1)
-		self.id = id
+		_Cacheable.init(True, -1, cachemgr, id, 'Checkin')
