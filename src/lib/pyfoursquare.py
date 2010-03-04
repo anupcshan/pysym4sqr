@@ -114,6 +114,14 @@ class CacheMgr(object):
 		"""
 		pass
 
+	def getCachedObject(self, type, id, cacheMaxAge):
+		"""
+			Method to get a formatted object from the cache.
+			Returns None if object not found in cache or object in
+			cache is stale.
+		"""
+		return None
+
 class CacheConfig(object):
 	"""Cache configuration object"""
 
@@ -145,7 +153,7 @@ class _Cacheable(object):
 			Write object back into the cache. This method is to be
 			called immediately after a network request.
 		"""
-		cacheMgr.writeback(self.objtype, self._cacheFormatObject())
+		self.cachemgr.writeback(self.objtype, self._cacheFormatObject())
 
 	def _cacheFormatObject(self):
 		"""
