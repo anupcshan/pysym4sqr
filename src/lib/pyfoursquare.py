@@ -194,8 +194,8 @@ class _User(_Networked, _Cacheable):
 	badges = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(network)
-		_Cacheable.__init__(True, 3600, cachemgr, id, 'User')
+		_Networked.__init__(self, network)
+		_Cacheable.__init__(self, True, 3600, cachemgr, id, 'User')
 
 	def isMe(self):
 		pass
@@ -207,7 +207,7 @@ class SelfUser(_User):
 	"""Current User. Only one object of this class can be created."""
 
 	def __init__(self, network, cachemgr, id):
-		_User.__init__(network, cachemgr, id)
+		_User.__init__(self, network, cachemgr, id)
 
 	def isMe(self):
 		return True
@@ -221,7 +221,7 @@ class User(_User):
 	friendstatus = None
 
 	def __init__(self, network, cachemgr, id):
-		_User.__init__(network, cachemgr, id)
+		_User.__init__(self, network, cachemgr, id)
 
 	def isMe(self):
 		return False
@@ -251,8 +251,8 @@ class Venue(_Networked, _Cacheable):
 	links = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(network)
-		_Cacheable.__init__(True, 86400, cachemgr, id, 'Venue')
+		_Networked.__init__(self, network)
+		_Cacheable.__init__(self, True, 86400, cachemgr, id, 'Venue')
 
 class Checkin(_Networked, _Cacheable):
 	"""A checkin."""
@@ -264,5 +264,5 @@ class Checkin(_Networked, _Cacheable):
 	user = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(network)
-		_Cacheable.__init__(True, -1, cachemgr, id, 'Checkin')
+		_Networked.__init__(self, network)
+		_Cacheable.__init__(self, True, -1, cachemgr, id, 'Checkin')
