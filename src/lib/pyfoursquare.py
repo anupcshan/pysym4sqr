@@ -195,7 +195,7 @@ class _User(_Networked, _Cacheable):
 
 	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, 3600, cachemgr, id, 'User')
+		_Cacheable.__init__(True, 3600, cachemgr, id, 'User')
 
 	def isMe(self):
 		pass
@@ -252,7 +252,7 @@ class Venue(_Networked, _Cacheable):
 
 	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, 86400, cachemgr, id, 'Venue')
+		_Cacheable.__init__(True, 86400, cachemgr, id, 'Venue')
 
 class Checkin(_Networked, _Cacheable):
 	"""A checkin."""
@@ -265,4 +265,4 @@ class Checkin(_Networked, _Cacheable):
 
 	def __init__(self, network, cachemgr, id):
 		_Networked.__init__(network)
-		_Cacheable.init(True, -1, cachemgr, id, 'Checkin')
+		_Cacheable.__init__(True, -1, cachemgr, id, 'Checkin')
