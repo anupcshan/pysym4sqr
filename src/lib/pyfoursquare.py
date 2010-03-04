@@ -186,7 +186,16 @@ class _Networked(object):
 	def __init__(self, network):
 		self.network = network
 
-class _User(_Networked, _Cacheable):
+class _CacheableNetworkObject(_Networked, _Cacheable):
+	"""An abstract cacheable network object"""
+
+	def __init__(self, network, cacheable, cacheMaxAge, cachemgr, id,
+			objtype):
+		_Networked.__init__(self, network)
+		_Cacheable.__init__(self, cacheable, cacheMaxAge, cachemgr, id,
+				objtype)
+
+class _User(_CacheableNetworkObject):
 	"""User Base object"""
 
 	firstname = None
@@ -202,8 +211,7 @@ class _User(_Networked, _Cacheable):
 	badges = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(self, network)
-		_Cacheable.__init__(self, True, 3600, cachemgr, id, 'User')
+		_CacheableNetworkObject.__init__(self, network, True, 3600, cachemgr, id, 'User')
 
 	def isMe(self):
 		pass
@@ -240,7 +248,7 @@ class User(_User):
 		return False
 		# TODO : Handle friend request pending states
 
-class Venue(_Networked, _Cacheable):
+class Venue(_CacheableNetworkObject):
 	"""A venue."""
 
 	name = None
@@ -259,10 +267,9 @@ class Venue(_Networked, _Cacheable):
 	links = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(self, network)
-		_Cacheable.__init__(self, True, 86400, cachemgr, id, 'Venue')
+		_CacheableNetworkObject.__init__(self, network, True, 86400, cachemgr, id, 'Venue')
 
-class Checkin(_Networked, _Cacheable):
+class Checkin(_CacheableNetworkObject):
 	"""A checkin."""
 
 	created = None
@@ -272,5 +279,4 @@ class Checkin(_Networked, _Cacheable):
 	user = None
 
 	def __init__(self, network, cachemgr, id):
-		_Networked.__init__(self, network)
-		_Cacheable.__init__(self, True, -1, cachemgr, id, 'Checkin')
+		_CacheableNetworkObject.__init__(self, network, True, -1, cachemgr, id, 'Checkin')
