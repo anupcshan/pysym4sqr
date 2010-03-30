@@ -80,13 +80,12 @@ class Network(object):
 
 		return currentUser
 
-	def makeRequest(self, command, arguments, type, cacheconfig, version =
-			None, format = None):
+	def makeRequest(self, command, arguments, type, version = None, format =
+			None):
 		"""
 			command: API command (eg. venues)
 			arguments: Dict containing parameters to be sent
 			type: GET / POST
-			cacheconfig: CacheConfig object
 			version: (Optional) API version parameter (will override
 					self.version)
 			format: (Optional) json / xml (will override
@@ -99,9 +98,29 @@ class Network(object):
 
 		url = self.api_root + '/' + version + '/' + command + '.' + format
 
-		# TODO : Add cache layer here. Call cache object which
-		#	 calls Request if required.
 		response = Request(url, arguments, type).execute()
+
+class CacheMgr(object):
+	"""Interface to stored and retrieve objects in cache"""
+
+	# TODO : Add data members related to backend storage.
+
+	def __init__(self):
+		pass
+
+	def writeback(self, type, object):
+		"""
+			Method to write a formatted object into the cache.
+		"""
+		pass
+
+	def getCachedObject(self, type, id, cacheMaxAge):
+		"""
+			Method to get a formatted object from the cache.
+			Returns None if object not found in cache or object in
+			cache is stale.
+		"""
+		return None
 
 class CacheConfig(object):
 	"""Cache configuration object"""
@@ -119,9 +138,29 @@ class _Cacheable(object):
 	"""Abstract cacheable object"""
 
 	cacheconfig = None
+	cachemgr = None
+	objtype = None	# User/Venue/Checkin/...
+	id = None # Key used to store object in cache
 
-	def __init__(self, cacheable, cacheMaxAge):
-		cacheconfig = CacheConfig(cacheable, cacheMaxAge)
+	def __init__(self, cacheable, cacheMaxAge, cachemgr, id, objtype):
+		self.cacheconfig = CacheConfig(cacheable, cacheMaxAge)
+		self.cachemgr = cachemgr
+		self.id = id
+		self.objtype = objtype
+
+	def _cacheWriteback(self):
+		"""
+			Write object back into the cache. This method is to be
+			called immediately after a network request.
+		"""
+		self.cachemgr.writeback(self.objtype, self._cacheFormatObject())
+
+	def _cacheFormatObject(self):
+		"""
+			Abstract method which defines the format of data to be
+			stored in cache. Needs to be implemented by child class.
+		"""
+		pass
 
 class Request(object):
 	"""A network request object"""
@@ -147,10 +186,43 @@ class _Networked(object):
 	def __init__(self, network):
 		self.network = network
 
-class _User(_Networked, _Cacheable):
+class _CacheableNetworkObject(_Networked, _Cacheable):
+	"""An abstract cacheable network object"""
+
+	def __init__(self, network, cacheable, cacheMaxAge, cachemgr, id,
+			objtype):
+		_Networked.__init__(self, network)
+		_Cacheable.__init__(self, cacheable, cacheMaxAge, cachemgr, id,
+				objtype)
+
+	def getObject(self, forceRefresh = False):
+		"""
+			Get the object from cache. If not found in cache, get
+			from the network resource.
+
+			forceRefresh : Ignore cache
+		"""
+		cachedObject = None
+
+		if forceRefresh == False:
+			cachedObject = self.cachemgr.getCachedObject(
+				self.objtype, self.id, self.cacheconfig.cacheMaxAge)
+
+		if cachedObject == None:
+			cachedObject = self._getObjectFromNetwork()
+
+		return cachedObject
+
+	def _getObjectFromNetwork(self):
+		"""
+			Abstract method to be called when object is not found in
+			cache.
+		"""
+		pass
+
+class _User(_CacheableNetworkObject):
 	"""User Base object"""
 
-	id = None
 	firstname = None
 	lastname = None
 	photo = None
@@ -163,10 +235,8 @@ class _User(_Networked, _Cacheable):
 	checkin = None
 	badges = None
 
-	def __init__(self, network, id):
-		_Networked.__init__(network)
-		_Cacheable.init(True, 3600)
-		self.id = id
+	def __init__(self, network, cachemgr, id):
+		_CacheableNetworkObject.__init__(self, network, True, 3600, cachemgr, id, 'User')
 
 	def isMe(self):
 		pass
@@ -177,8 +247,8 @@ class _User(_Networked, _Cacheable):
 class SelfUser(_User):
 	"""Current User. Only one object of this class can be created."""
 
-	def __init__(self, network, id):
-		_User.__init__(network, id)
+	def __init__(self, network, cachemgr, id):
+		_User.__init__(self, network, cachemgr, id)
 
 	def isMe(self):
 		return True
@@ -191,8 +261,8 @@ class User(_User):
 
 	friendstatus = None
 
-	def __init__(self, network, id):
-		_User.__init__(network, id)
+	def __init__(self, network, cachemgr, id):
+		_User.__init__(self, network, cachemgr, id)
 
 	def isMe(self):
 		return False
@@ -203,10 +273,9 @@ class User(_User):
 		return False
 		# TODO : Handle friend request pending states
 
-class Venue(_Networked, _Cacheable):
+class Venue(_CacheableNetworkObject):
 	"""A venue."""
 
-	id = None
 	name = None
 	address = None
 	crossstreet = None
@@ -222,22 +291,17 @@ class Venue(_Networked, _Cacheable):
 	tags = None
 	links = None
 
-	def __init__(self, network, id):
-		_Networked.__init__(network)
-		_Cacheable.init(True, 86400)
-		self.id = id
+	def __init__(self, network, cachemgr, id):
+		_CacheableNetworkObject.__init__(self, network, True, 86400, cachemgr, id, 'Venue')
 
-class Checkin(_Networked, _Cacheable):
+class Checkin(_CacheableNetworkObject):
 	"""A checkin."""
 
-	id = None
 	created = None
 	display = None
 	venue = None
 	shout = None
 	user = None
 
-	def __init__(self, network, id):
-		_Networked.__init__(network)
-		_Cacheable.init(True, -1)
-		self.id = id
+	def __init__(self, network, cachemgr, id):
+		_CacheableNetworkObject.__init__(self, network, True, -1, cachemgr, id, 'Checkin')
