@@ -195,6 +195,31 @@ class _CacheableNetworkObject(_Networked, _Cacheable):
 		_Cacheable.__init__(self, cacheable, cacheMaxAge, cachemgr, id,
 				objtype)
 
+	def getObject(self, forceRefresh = False):
+		"""
+			Get the object from cache. If not found in cache, get
+			from the network resource.
+
+			forceRefresh : Ignore cache
+		"""
+		cachedObject = None
+
+		if forceRefresh == False:
+			cachedObject = self.cachemgr.getCachedObject(
+				self.objtype, self.id, self.cacheconfig.cacheMaxAge)
+
+		if cachedObject == None:
+			cachedObject = self._getObjectFromNetwork()
+
+		return cachedObject
+
+	def _getObjectFromNetwork(self):
+		"""
+			Abstract method to be called when object is not found in
+			cache.
+		"""
+		pass
+
 class _User(_CacheableNetworkObject):
 	"""User Base object"""
 
